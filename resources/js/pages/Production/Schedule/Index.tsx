@@ -247,39 +247,18 @@ export default function ScheduleIndex({ lines, schedules: initialSchedules }: Sc
         const { active, over } = event;
         setActiveId(null);
 
-        console.log('🎯 Drag End:', {
-            activeId: active.id,
-            overId: over?.id,
-            activeData: active.data,
-            overData: over?.data
-        });
-
-        if (!over) {
-            console.log('❌ No drop target');
-            return;
-        }
+        if (!over) return;
 
         const scheduleId = active.id as number;
         const newStatus = over.id as ScheduleStatus;
         const schedule = schedules.find((s) => s.id === scheduleId);
 
-        console.log('📋 Schedule:', {
-            scheduleId,
-            newStatus,
-            currentStatus: schedule?.status,
-            found: !!schedule
-        });
-
         if (!schedule) {
-            console.log('❌ Schedule not found');
             toast.error('Schedule not found');
             return;
         }
 
-        if (schedule.status === newStatus) {
-            console.log('✅ Already in this status');
-            return;
-        }
+        if (schedule.status === newStatus) return;
 
         // Store original schedules for rollback
         const originalSchedules = [...schedules];
@@ -287,13 +266,9 @@ export default function ScheduleIndex({ lines, schedules: initialSchedules }: Sc
         // Optimistic update
         const updatedSchedules = schedules.map((s) => (s.id === scheduleId ? { ...s, status: newStatus } : s));
         setSchedules(updatedSchedules);
-        console.log('⏩ Optimistic update applied');
 
         try {
-            const url = route('production.schedules.update-status', scheduleId);
-            console.log('🌐 API Call:', { url, method: 'PATCH', body: { status: newStatus } });
-
-            const response = await fetch(url, {
+            const response = await fetch(route('production.schedules.update-status', scheduleId), {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -304,7 +279,6 @@ export default function ScheduleIndex({ lines, schedules: initialSchedules }: Sc
             });
 
             const data = await response.json();
-            console.log('📥 API Response:', { status: response.status, data });
 
             if (!response.ok) {
                 throw new Error(data.message || 'Failed to update status');
@@ -315,12 +289,11 @@ export default function ScheduleIndex({ lines, schedules: initialSchedules }: Sc
             if (viewMode === 'list') {
                 dtRef.current?.reload();
             }
-            console.log('✅ Update successful');
         } catch (error) {
             // Rollback optimistic update
             setSchedules(originalSchedules);
             toast.error(error instanceof Error ? error.message : 'Failed to update schedule status');
-            console.error('❌ Update failed:', error);
+            console.error('Failed to update schedule:', error);
         }
     };
 

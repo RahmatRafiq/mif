@@ -8,6 +8,8 @@ interface ScheduleRepositoryInterface extends BaseRepositoryInterface
 {
     public function getActive(): Collection;
 
+    public function getAllWithRelationships(): Collection;
+
     public function getDelayed(): Collection;
 
     public function getByLine(int $lineId): Collection;

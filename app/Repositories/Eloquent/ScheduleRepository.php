@@ -18,6 +18,11 @@ class ScheduleRepository extends BaseRepository implements ScheduleRepositoryInt
         return $this->model->active()->with(['order', 'line'])->get();
     }
 
+    public function getAllWithRelationships(): Collection
+    {
+        return $this->model->with(['order', 'line'])->orderBy('start_date', 'desc')->get();
+    }
+
     public function getDelayed(): Collection
     {
         return $this->model->delayed()->with(['order', 'line'])->get();

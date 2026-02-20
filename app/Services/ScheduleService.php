@@ -26,7 +26,8 @@ class ScheduleService
      */
     public function getAllSchedules(): Collection
     {
-        return $this->scheduleRepository->getActive();
+        // Get all schedules (not just active) for Kanban board
+        return $this->scheduleRepository->getAllWithRelationships();
     }
 
     /**

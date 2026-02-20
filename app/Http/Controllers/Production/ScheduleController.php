@@ -29,9 +29,30 @@ class ScheduleController extends Controller
         $lines = $this->lineService->getActiveLines();
         $schedules = $this->scheduleService->getAllSchedules();
 
+        // Transform schedules for frontend (same format as DataTables)
+        $transformedSchedules = $schedules->map(function ($schedule) {
+            $completionPercentage = $schedule->qty_total_target > 0
+                ? round(($schedule->qty_completed / $schedule->qty_total_target) * 100, 1)
+                : 0;
+
+            return [
+                'id' => $schedule->id,
+                'order' => $schedule->order,
+                'line' => $schedule->line,
+                'start_date' => $schedule->start_date->format('Y-m-d'),
+                'finish_date' => $schedule->finish_date->format('Y-m-d'),
+                'current_finish_date' => $schedule->current_finish_date->format('Y-m-d'),
+                'qty_total_target' => $schedule->qty_total_target,
+                'qty_completed' => $schedule->qty_completed,
+                'completion_percentage' => $completionPercentage,
+                'status' => $schedule->status,
+                'days_extended' => $schedule->days_extended,
+            ];
+        });
+
         return Inertia::render('Production/Schedule/Index', [
             'lines' => $lines,
-            'schedules' => $schedules,
+            'schedules' => $transformedSchedules,
         ]);
     }
 
@@ -267,8 +288,29 @@ class ScheduleController extends Controller
             ? $this->scheduleService->getSchedulesByLine($lineId)
             : $this->scheduleService->getAllSchedules();
 
+        // Transform schedules for frontend (same format as DataTables)
+        $transformedSchedules = $schedules->map(function ($schedule) {
+            $completionPercentage = $schedule->qty_total_target > 0
+                ? round(($schedule->qty_completed / $schedule->qty_total_target) * 100, 1)
+                : 0;
+
+            return [
+                'id' => $schedule->id,
+                'order' => $schedule->order,
+                'line' => $schedule->line,
+                'start_date' => $schedule->start_date->format('Y-m-d'),
+                'finish_date' => $schedule->finish_date->format('Y-m-d'),
+                'current_finish_date' => $schedule->current_finish_date->format('Y-m-d'),
+                'qty_total_target' => $schedule->qty_total_target,
+                'qty_completed' => $schedule->qty_completed,
+                'completion_percentage' => $completionPercentage,
+                'status' => $schedule->status,
+                'days_extended' => $schedule->days_extended,
+            ];
+        });
+
         return response()->json([
-            'schedules' => $schedules,
+            'schedules' => $transformedSchedules,
         ]);
     }
 
