@@ -40,14 +40,38 @@ class MenuRepository extends BaseRepository implements MenuRepositoryInterface
                 return ! $menu->permission || $user->can($menu->permission);
             })
             ->map(function ($menu) use ($user) {
-                // Filter children by permissions
-                $menu->children = $menu->children->filter(function ($child) use ($user) {
-                    return ! $child->permission || $user->can($child->permission);
-                })->values();
+                // Recursively filter children by permissions
+                $menu->children = $this->filterChildrenByPermission($menu->children, $user);
 
                 return $menu;
             })
             ->values();
+    }
+
+    /**
+     * Recursively filter children menus by user permissions
+     */
+    private function filterChildrenByPermission($children, User $user): Collection
+    {
+        return $children->filter(function ($child) use ($user) {
+            return ! $child->permission || $user->can($child->permission);
+        })
+        ->map(function ($child) use ($user) {
+            // Load grandchildren if exists
+            if (! $child->relationLoaded('children')) {
+                $child->load(['children' => function ($query) {
+                    $query->orderBy('order');
+                }]);
+            }
+
+            // Recursively filter grandchildren
+            if ($child->children && $child->children->count() > 0) {
+                $child->children = $this->filterChildrenByPermission($child->children, $user);
+            }
+
+            return $child;
+        })
+        ->values();
     }
 
     /**
