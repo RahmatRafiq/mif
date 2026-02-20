@@ -75,7 +75,16 @@ export default function LineIndex() {
                         ref={dtRef}
                         ajax={{ url: route('production.lines.json'), type: 'GET' }}
                         columns={columns}
-                        onDelete={handleDelete}
+                        onRowDelete={handleDelete}
+                        confirmationConfig={{
+                            delete: {
+                                title: 'Delete Line Confirmation',
+                                message: 'Are you sure you want to delete this production line?',
+                                confirmText: 'Delete',
+                                cancelText: 'Cancel',
+                                successMessage: 'Line deleted successfully',
+                            },
+                        }}
                     />
                 </div>
             </PageContainer>

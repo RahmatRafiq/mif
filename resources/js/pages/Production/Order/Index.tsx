@@ -85,7 +85,16 @@ export default function OrderIndex() {
                         ref={dtRef}
                         ajax={{ url: route('production.orders.json'), type: 'GET' }}
                         columns={columns}
-                        onDelete={handleDelete}
+                        onRowDelete={handleDelete}
+                        confirmationConfig={{
+                            delete: {
+                                title: 'Delete Order Confirmation',
+                                message: 'Are you sure you want to delete this production order?',
+                                confirmText: 'Delete',
+                                cancelText: 'Cancel',
+                                successMessage: 'Order deleted successfully',
+                            },
+                        }}
                     />
                 </div>
             </PageContainer>

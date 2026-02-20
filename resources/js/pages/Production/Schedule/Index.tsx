@@ -115,7 +115,16 @@ export default function ScheduleIndex() {
                         ref={dtRef}
                         ajax={{ url: route('production.schedules.json'), type: 'GET' }}
                         columns={columns}
-                        onDelete={handleDelete}
+                        onRowDelete={handleDelete}
+                        confirmationConfig={{
+                            delete: {
+                                title: 'Delete Schedule Confirmation',
+                                message: 'Are you sure you want to delete this production schedule?',
+                                confirmText: 'Delete',
+                                cancelText: 'Cancel',
+                                successMessage: 'Schedule deleted successfully',
+                            },
+                        }}
                     />
                 </div>
             </PageContainer>
