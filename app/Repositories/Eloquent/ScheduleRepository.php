@@ -64,7 +64,8 @@ class ScheduleRepository extends BaseRepository implements ScheduleRepositoryInt
 
     public function updateStatus(int $scheduleId, string $status): bool
     {
-        return $this->update($scheduleId, ['status' => $status]);
+        $this->update($scheduleId, ['status' => $status]);
+        return true;
     }
 
     public function extendSchedule(int $scheduleId, int $days): bool

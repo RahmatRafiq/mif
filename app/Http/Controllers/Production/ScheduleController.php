@@ -265,16 +265,14 @@ class ScheduleController extends Controller
 
     /**
      * Display Kanban board view
+     * Redirects to index page where Kanban view is integrated
      */
     public function kanban()
     {
-        $lines = $this->lineService->getActiveLines();
-        $schedules = $this->scheduleService->getAllSchedules();
-
-        return Inertia::render('Production/Schedule/Kanban', [
-            'lines' => $lines,
-            'initialSchedules' => $schedules,
-        ]);
+        // Kanban view is integrated in the Index page with view toggle
+        // Redirect to index page to use the integrated Kanban view
+        return redirect()->route('production.schedules.index')
+            ->with('info', 'Kanban view is available via the view toggle in the schedule list.');
     }
 
     /**

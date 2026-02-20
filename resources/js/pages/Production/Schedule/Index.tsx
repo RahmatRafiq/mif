@@ -3,7 +3,7 @@ import Heading from '@/components/heading';
 import PageContainer from '@/components/page-container';
 import ScheduleCard from '@/components/schedule-card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -40,7 +40,7 @@ const kanbanColumns: KanbanColumn[] = [
     { id: 'completed', title: 'Completed', description: 'Finished', color: 'border-green-500/50 bg-green-500/10' },
 ];
 
-// Droppable Column Component
+// Droppable Column Component - No Header
 function KanbanColumnDroppable({
     column,
     schedules,
@@ -54,24 +54,8 @@ function KanbanColumnDroppable({
         id: column.id,
     });
 
-    const textColorClass = {
-        pending: 'text-slate-600 dark:text-slate-400',
-        in_progress: 'text-blue-600 dark:text-blue-400',
-        delayed: 'text-red-600 dark:text-red-400',
-        completed: 'text-green-600 dark:text-green-400',
-    }[column.id];
-
     return (
-        <Card className="flex h-[calc(100vh-450px)] min-h-[500px] flex-col">
-            <CardHeader className={`border-b ${column.color}`}>
-                <CardTitle className={`flex items-center justify-between text-base ${textColorClass}`}>
-                    <span>{column.title}</span>
-                    <span className="rounded-full bg-background px-2.5 py-0.5 text-sm font-semibold">
-                        {schedules.length}
-                    </span>
-                </CardTitle>
-            </CardHeader>
-
+        <Card className={`flex h-[calc(100vh-450px)] min-h-[500px] flex-col ${column.color}`}>
             <CardContent
                 ref={setNodeRef}
                 className={`flex-1 overflow-y-auto p-3 transition-colors ${
@@ -408,20 +392,19 @@ export default function ScheduleIndex({ lines, schedules: initialSchedules }: Sc
                 {/* Kanban View */}
                 {viewMode === 'kanban' && (
                     <>
-                        {/* Stats Summary */}
-                        <div className="mb-6 grid gap-4 md:grid-cols-4">
+                        {/* Stats Summary - Compact */}
+                        <div className="mb-4 grid gap-3 md:grid-cols-4">
                             {kanbanColumns.map((column) => {
                                 const count = schedulesByStatus[column.id]?.length || 0;
                                 const Icon = column.id === 'pending' ? CalendarDays : column.id === 'in_progress' ? Loader2 : column.id === 'delayed' ? RefreshCw : Plus;
                                 return (
                                     <Card key={column.id} className={`border-l-4 ${column.color}`}>
-                                        <CardContent className="flex items-center justify-between p-4">
+                                        <CardContent className="flex items-center justify-between px-3 py-2">
                                             <div>
-                                                <p className="text-sm font-medium text-muted-foreground">{column.title}</p>
-                                                <h3 className="text-2xl font-bold">{count}</h3>
-                                                <p className="text-xs text-muted-foreground">{column.description}</p>
+                                                <p className="text-xs font-medium text-muted-foreground">{column.title}</p>
+                                                <h3 className="text-xl font-bold leading-tight">{count}</h3>
                                             </div>
-                                            <Icon className="h-8 w-8 text-muted-foreground opacity-50" />
+                                            <Icon className="h-6 w-6 text-muted-foreground opacity-40" />
                                         </CardContent>
                                     </Card>
                                 );

@@ -4,12 +4,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { Schedule, ScheduleDailyOutput } from '@/types/production';
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { AlertCircle, Calendar, CheckCircle2, Package, TrendingUp } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
@@ -30,7 +29,7 @@ export default function ScheduleShow({ schedule }: ScheduleShowProps) {
         { title: `Schedule #${schedule.id}`, href: '#' },
     ];
 
-    const handleSubmitActualOutput = (e: FormEvent, dailyOutput: ScheduleDailyOutput) => {
+    const handleSubmitActualOutput = (e: FormEvent) => {
         e.preventDefault();
         post(route('production.schedules.input-actual'), {
             onSuccess: () => {
@@ -191,7 +190,7 @@ export default function ScheduleShow({ schedule }: ScheduleShowProps) {
                                                     <TableCell className="text-right">
                                                         {isEditing ? (
                                                             <form
-                                                                onSubmit={(e) => handleSubmitActualOutput(e, dailyOutput)}
+                                                                onSubmit={handleSubmitActualOutput}
                                                                 className="flex items-center gap-2"
                                                             >
                                                                 <Input
