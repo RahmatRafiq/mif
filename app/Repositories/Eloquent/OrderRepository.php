@@ -30,6 +30,7 @@ class OrderRepository extends BaseRepository implements OrderRepositoryInterface
 
     public function updateStatus(int $orderId, string $status): bool
     {
-        return $this->update($orderId, ['status' => $status]);
+        $this->update($orderId, ['status' => $status]);
+        return true;
     }
 }
