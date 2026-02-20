@@ -12,9 +12,10 @@ class AppSettingSeeder extends Seeder
      */
     public function run(): void
     {
-        AppSetting::updateOrCreate(
+        AppSetting::firstOrCreate(
             ['id' => 1],
             [
+                'id' => 1,
                 'app_name' => 'Laravel App',
                 'app_description' => 'A modern Laravel application.',
                 'app_logo' => '/logo.svg',
