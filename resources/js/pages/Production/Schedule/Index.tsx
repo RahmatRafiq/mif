@@ -2,11 +2,11 @@ import DataTableWrapper, { DataTableWrapperRef } from '@/components/datatables';
 import Heading from '@/components/heading';
 import PageContainer from '@/components/page-container';
 import ScheduleCard from '@/components/schedule-card';
+import ToggleTabs from '@/components/toggle-tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import type { DataTableColumn } from '@/types/DataTables';
@@ -15,7 +15,7 @@ import { toast } from '@/utils/toast';
 import { closestCenter, DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Head, Link, router } from '@inertiajs/react';
-import { CalendarDays, Grid3x3, LayoutList, Loader2, Plus, RefreshCw } from 'lucide-react';
+import { CalendarDays, Loader2, Plus, RefreshCw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface ScheduleIndexProps {
@@ -158,7 +158,7 @@ export default function ScheduleIndex({ lines, schedules: initialSchedules }: Sc
     ];
 
     const dtRef = useRef<DataTableWrapperRef>(null);
-    const [viewMode, setViewMode] = useState<ViewMode>('list');
+    const [viewMode, setViewMode] = useState<ViewMode>('kanban');
     const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules || []);
     const [selectedLine, setSelectedLine] = useState<string>('all');
     const [activeId, setActiveId] = useState<number | null>(null);
@@ -324,16 +324,15 @@ export default function ScheduleIndex({ lines, schedules: initialSchedules }: Sc
 
                     <div className="flex flex-wrap items-center gap-3">
                         {/* View Toggle */}
-                        <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as ViewMode)}>
-                            <ToggleGroupItem value="list" aria-label="List view" className="gap-2">
-                                <LayoutList className="h-4 w-4" />
-                                <span className="hidden sm:inline">List</span>
-                            </ToggleGroupItem>
-                            <ToggleGroupItem value="kanban" aria-label="Kanban view" className="gap-2">
-                                <Grid3x3 className="h-4 w-4" />
-                                <span className="hidden sm:inline">Kanban</span>
-                            </ToggleGroupItem>
-                        </ToggleGroup>
+                        <ToggleTabs
+                            tabs={['kanban', 'list']}
+                            active={viewMode}
+                            onChange={(value) => setViewMode(value as ViewMode)}
+                            labels={{
+                                kanban: 'Kanban',
+                                list: 'List',
+                            }}
+                        />
 
                         {/* Line Filter (Kanban only) */}
                         {viewMode === 'kanban' && (
