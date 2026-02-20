@@ -155,6 +155,11 @@ class ScheduleService
                 throw new \Exception('Daily output not found');
             }
 
+            // Prevent re-input on completed days (optional: allow re-input by removing this check)
+            if ($dailyOutput->is_completed && $dailyOutput->actual_output > 0) {
+                throw new \Exception('This daily output has already been completed. Cannot modify.');
+            }
+
             $schedule = $dailyOutput->schedule;
 
             // Update actual output and calculate balance
@@ -178,7 +183,8 @@ class ScheduleService
             }
 
             // Check if schedule is completed
-            if ($totalCompleted + $actualOutput >= $schedule->qty_total_target) {
+            // Note: $totalCompleted already includes $actualOutput (updated above)
+            if ($totalCompleted >= $schedule->qty_total_target) {
                 $this->scheduleRepository->updateStatus($schedule->id, 'completed');
                 $this->orderRepository->updateStatus($schedule->order_id, 'completed');
             } else {

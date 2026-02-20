@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Production;
 
+use App\Models\Line;
+use App\Models\Order;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateScheduleRequest extends FormRequest
@@ -22,5 +24,34 @@ class UpdateScheduleRequest extends FormRequest
             'status' => ['nullable', 'in:pending,in_progress,completed,delayed'],
             'notes' => ['nullable', 'string'],
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $scheduleId = $this->route('schedule'); // Get schedule ID from route parameter
+
+            // Check line availability (exclude current schedule)
+            if ($this->filled(['line_id', 'start_date', 'finish_date'])) {
+                $line = Line::find($this->input('line_id'));
+                if ($line && ! $line->isAvailableInRange($this->input('start_date'), $this->input('finish_date'), $scheduleId)) {
+                    $validator->errors()->add('line_id', 'This production line is already scheduled in the selected date range.');
+                }
+            }
+
+            // Check if qty_total_target exceeds order remaining qty
+            if ($this->filled(['order_id', 'qty_total_target'])) {
+                $order = Order::find($this->input('order_id'));
+                if ($order) {
+                    $remainingQty = $order->remaining_qty ?? $order->qty_total;
+                    if ($this->input('qty_total_target') > $remainingQty) {
+                        $validator->errors()->add('qty_total_target', "Target quantity ({$this->input('qty_total_target')}) exceeds order remaining quantity ({$remainingQty}).");
+                    }
+                }
+            }
+        });
     }
 }

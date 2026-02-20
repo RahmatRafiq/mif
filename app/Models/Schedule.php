@@ -180,6 +180,8 @@ class Schedule extends Model
 
     /**
      * Get schedules that will be affected if this schedule extends
+     * Uses finish_date (original planned date) to find ALL schedules that need shifting
+     * This ensures cascading works correctly even for multiple sequential extensions
      */
     public function getAffectedSchedules()
     {
