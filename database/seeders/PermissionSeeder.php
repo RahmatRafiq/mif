@@ -36,6 +36,15 @@ class PermissionSeeder extends Seeder
             'upload-files',
             'delete-files',
             'manage-folders',
+
+            // Production Schedule permissions
+            'view-schedules',
+            'create-schedules',
+            'edit-schedules',
+            'delete-schedules',
+            'input-actual-output',
+            'manage-lines',
+            'manage-orders',
         ];
 
         foreach ($permissions as $permission) {

@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             AppSettingSeeder::class,
             MenuSeeder::class,
+            LineSeeder::class,
+            OrderSeeder::class,
         ]);
     }
 }

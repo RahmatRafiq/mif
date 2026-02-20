@@ -34,6 +34,13 @@ class RolePermissionSeeder extends Seeder
                 'upload-files',
                 'delete-files',
                 'manage-folders',
+                'view-schedules',
+                'create-schedules',
+                'edit-schedules',
+                'delete-schedules',
+                'input-actual-output',
+                'manage-lines',
+                'manage-orders',
             ];
 
             foreach ($adminPermissions as $permission) {
@@ -49,6 +56,8 @@ class RolePermissionSeeder extends Seeder
                 'view-dashboard',
                 'view-gallery',
                 'upload-files',
+                'view-schedules',
+                'input-actual-output',
             ];
 
             foreach ($userPermissions as $permission) {

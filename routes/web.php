@@ -77,6 +77,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('menus/{menu}', [\App\Http\Controllers\MenuController::class, 'update'])->name('menus.update');
             Route::delete('menus/{menu}', [\App\Http\Controllers\MenuController::class, 'destroy'])->name('menus.destroy');
         });
+
+        // Production Schedule Routes
+        Route::prefix('production')->name('production.')->group(function () {
+            // Lines Management
+            Route::post('lines/json', [\App\Http\Controllers\Production\LineController::class, 'json'])->name('lines.json');
+            Route::resource('lines', \App\Http\Controllers\Production\LineController::class);
+
+            // Orders Management
+            Route::post('orders/json', [\App\Http\Controllers\Production\OrderController::class, 'json'])->name('orders.json');
+            Route::resource('orders', \App\Http\Controllers\Production\OrderController::class);
+
+            // Schedules Management
+            Route::post('schedules/json', [\App\Http\Controllers\Production\ScheduleController::class, 'json'])->name('schedules.json');
+            Route::post('schedules/input-actual', [\App\Http\Controllers\Production\ScheduleController::class, 'inputActualOutput'])->name('schedules.input-actual');
+            Route::get('schedules/timeline', [\App\Http\Controllers\Production\ScheduleController::class, 'timeline'])->name('schedules.timeline');
+            Route::post('schedules/check-availability', [\App\Http\Controllers\Production\ScheduleController::class, 'checkAvailability'])->name('schedules.check-availability');
+            Route::resource('schedules', \App\Http\Controllers\Production\ScheduleController::class);
+        });
     });
 
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
