@@ -11,10 +11,10 @@ import { Plus } from 'lucide-react';
 import { useRef } from 'react';
 
 const columns: DataTableColumn<Line>[] = [
-    { data: 'id', title: 'ID', className: 'all', width: '60px' },
+    { data: 'id', title: 'ID', className: 'desktop', width: '60px' },
     { data: 'code', title: 'Code', className: 'all' },
     { data: 'name', title: 'Line Name', className: 'all' },
-    { data: 'capacity_per_day', title: 'Capacity/Day', className: 'tablet-p' },
+    { data: 'capacity_per_day', title: 'Capacity', className: 'tablet-l' },
     {
         data: 'is_active',
         title: 'Status',

@@ -11,7 +11,7 @@ import { Plus } from 'lucide-react';
 import { useRef } from 'react';
 
 const columns: DataTableColumn<Schedule>[] = [
-    { data: 'id', title: 'ID', className: 'all', width: '60px' },
+    { data: 'id', title: 'ID', className: 'desktop', width: '60px' },
     {
         data: 'order',
         title: 'Order',
@@ -23,13 +23,13 @@ const columns: DataTableColumn<Schedule>[] = [
     {
         data: 'line',
         title: 'Line',
-        className: 'tablet-p',
+        className: 'desktop',
         render: (_data, _type, row: Schedule) => {
             return row.line ? `${row.line.code} - ${row.line.name}` : '-';
         },
     },
-    { data: 'start_date', title: 'Start Date', className: 'tablet-l' },
-    { data: 'finish_date', title: 'Finish Date', className: 'tablet-l' },
+    { data: 'start_date', title: 'Start', className: 'tablet-l' },
+    { data: 'finish_date', title: 'Finish', className: 'desktop' },
     {
         data: 'current_finish_date',
         title: 'Current Finish',
@@ -43,8 +43,8 @@ const columns: DataTableColumn<Schedule>[] = [
     },
     {
         data: 'qty_total_target',
-        title: 'Target/Completed',
-        className: 'tablet-p',
+        title: 'Progress',
+        className: 'tablet-l',
         render: (_data, _type, row: Schedule) => {
             return `${row.qty_completed} / ${row.qty_total_target}<br/><small class="text-muted-foreground">${row.completion_percentage || 0}%</small>`;
         },

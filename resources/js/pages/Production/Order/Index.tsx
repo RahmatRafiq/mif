@@ -11,12 +11,12 @@ import { Plus } from 'lucide-react';
 import { useRef } from 'react';
 
 const columns: DataTableColumn<Order>[] = [
-    { data: 'id', title: 'ID', className: 'all', width: '60px' },
+    { data: 'id', title: 'ID', className: 'desktop', width: '60px' },
     { data: 'order_number', title: 'Order Number', className: 'all' },
     { data: 'product_name', title: 'Product', className: 'all' },
-    { data: 'product_code', title: 'Code', className: 'tablet-p' },
-    { data: 'qty_total', title: 'Qty Total', className: 'tablet-p' },
-    { data: 'customer', title: 'Customer', className: 'tablet-l' },
+    { data: 'product_code', title: 'Code', className: 'desktop' },
+    { data: 'qty_total', title: 'Qty', className: 'tablet-l' },
+    { data: 'customer', title: 'Customer', className: 'desktop' },
     { data: 'order_date', title: 'Order Date', className: 'desktop' },
     { data: 'due_date', title: 'Due Date', className: 'desktop' },
     {
