@@ -15,16 +15,49 @@ class MenuSeeder extends Seeder
             'icon' => 'LayoutDashboard',
             'order' => 1,
         ]);
+
+        // Production Management
+        $production = Menu::create([
+            'title' => 'Production',
+            'icon' => 'Factory',
+            'order' => 2,
+            'permission' => 'view-schedules',
+        ]);
+        Menu::create([
+            'title' => 'Schedules',
+            'route' => 'production.schedules.index',
+            'icon' => 'Calendar',
+            'parent_id' => $production->id,
+            'permission' => 'view-schedules',
+            'order' => 1,
+        ]);
+        Menu::create([
+            'title' => 'Orders',
+            'route' => 'production.orders.index',
+            'icon' => 'ShoppingCart',
+            'parent_id' => $production->id,
+            'permission' => 'manage-orders',
+            'order' => 2,
+        ]);
+        Menu::create([
+            'title' => 'Sewing Lines',
+            'route' => 'production.lines.index',
+            'icon' => 'Layers',
+            'parent_id' => $production->id,
+            'permission' => 'manage-lines',
+            'order' => 3,
+        ]);
+
         $gallery = Menu::create([
             'title' => 'Gallery',
             'route' => 'gallery.index',
             'icon' => 'FileText',
-            'order' => 2,
+            'order' => 3,
         ]);
         $users = Menu::create([
             'title' => 'Users Management',
             'icon' => 'Users',
-            'order' => 3,
+            'order' => 4,
             'permission' => 'view-users',
         ]);
         Menu::create([
@@ -56,7 +89,7 @@ class MenuSeeder extends Seeder
             'route' => 'app-settings.index',
             'icon' => 'Settings',
             'permission' => 'manage-settings',
-            'order' => 4,
+            'order' => 5,
         ]);
 
         Menu::create([
@@ -64,14 +97,14 @@ class MenuSeeder extends Seeder
             'route' => 'menus.manage',
             'icon' => 'Settings',
             'permission' => 'manage-settings',
-            'order' => 5,
+            'order' => 6,
         ]);
         Menu::create([
             'title' => 'Activity Logs',
             'route' => 'activity-logs.index',
             'icon' => 'ListChecks',
             'permission' => 'view-activity-logs',
-            'order' => 6,
+            'order' => 7,
         ]);
 
     }
