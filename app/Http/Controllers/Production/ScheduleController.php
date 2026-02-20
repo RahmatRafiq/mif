@@ -40,7 +40,7 @@ class ScheduleController extends Controller
      */
     public function json(Request $request)
     {
-        $query = \App\Models\Schedule::with(['order', 'line'])->query();
+        $query = \App\Models\Schedule::query()->with(['order', 'line']);
 
         if ($request->filled('search.value')) {
             $search = $request->input('search.value');
