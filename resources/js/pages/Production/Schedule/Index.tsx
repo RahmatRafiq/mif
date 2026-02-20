@@ -113,7 +113,7 @@ export default function ScheduleIndex() {
                 <div className="mt-6">
                     <DataTableWrapper
                         ref={dtRef}
-                        ajax={{ url: route('production.schedules.json'), type: 'GET' }}
+                        ajax={{ url: route('production.schedules.json'), type: 'POST' }}
                         columns={columns}
                         onRowDelete={handleDelete}
                         confirmationConfig={{

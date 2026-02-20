@@ -7,7 +7,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
     return (
         <nav>
             {items.map((item) => (
-                <NavItemComponent key={item.href} item={item} />
+                <NavItemComponent key={item.id || item.href || item.title} item={item} />
             ))}
         </nav>
     );
@@ -42,7 +42,7 @@ function NavItemComponent({ item }: { item: NavItem }) {
                 <div className="ml-4 space-y-1">
                     {item.children!.map((child) => (
                         <Link
-                            key={child.href}
+                            key={child.id || child.href || child.title}
                             href={child.href}
                             className="flex items-center space-x-2 rounded p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700"
                         >

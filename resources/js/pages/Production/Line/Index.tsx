@@ -73,7 +73,7 @@ export default function LineIndex() {
                 <div className="mt-6">
                     <DataTableWrapper
                         ref={dtRef}
-                        ajax={{ url: route('production.lines.json'), type: 'GET' }}
+                        ajax={{ url: route('production.lines.json'), type: 'POST' }}
                         columns={columns}
                         onRowDelete={handleDelete}
                         confirmationConfig={{
