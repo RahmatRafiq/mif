@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SocialAuthController;
 use App\Models\AppSetting;
 use Illuminate\Support\Facades\Route;
@@ -19,9 +20,9 @@ Route::get('auth/{provider}/callback', [SocialAuthController::class, 'handleProv
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('dashboard')->group(function () {
-        Route::get('/', function () {
-            return Inertia::render('dashboard');
-        })->middleware('permission:view-dashboard')->name('dashboard');
+        Route::get('/', [DashboardController::class, 'index'])
+            ->middleware('permission:view-dashboard')
+            ->name('dashboard');
 
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
 
