@@ -12,7 +12,7 @@ import type { BreadcrumbItem } from '@/types';
 import type { DataTableColumn } from '@/types/DataTables';
 import type { Line, Schedule } from '@/types/production';
 import { toast } from '@/utils/toast';
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
+import { closestCenter, DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Head, Link, router } from '@inertiajs/react';
 import { CalendarDays, Grid3x3, LayoutList, Loader2, Plus, RefreshCw } from 'lucide-react';
@@ -247,36 +247,80 @@ export default function ScheduleIndex({ lines, schedules: initialSchedules }: Sc
         const { active, over } = event;
         setActiveId(null);
 
-        if (!over) return;
+        console.log('🎯 Drag End:', {
+            activeId: active.id,
+            overId: over?.id,
+            activeData: active.data,
+            overData: over?.data
+        });
+
+        if (!over) {
+            console.log('❌ No drop target');
+            return;
+        }
 
         const scheduleId = active.id as number;
         const newStatus = over.id as ScheduleStatus;
         const schedule = schedules.find((s) => s.id === scheduleId);
 
-        if (!schedule || schedule.status === newStatus) return;
+        console.log('📋 Schedule:', {
+            scheduleId,
+            newStatus,
+            currentStatus: schedule?.status,
+            found: !!schedule
+        });
+
+        if (!schedule) {
+            console.log('❌ Schedule not found');
+            toast.error('Schedule not found');
+            return;
+        }
+
+        if (schedule.status === newStatus) {
+            console.log('✅ Already in this status');
+            return;
+        }
+
+        // Store original schedules for rollback
+        const originalSchedules = [...schedules];
 
         // Optimistic update
         const updatedSchedules = schedules.map((s) => (s.id === scheduleId ? { ...s, status: newStatus } : s));
         setSchedules(updatedSchedules);
+        console.log('⏩ Optimistic update applied');
 
         try {
-            const response = await fetch(route('production.schedules.update-status', scheduleId), {
+            const url = route('production.schedules.update-status', scheduleId);
+            console.log('🌐 API Call:', { url, method: 'PATCH', body: { status: newStatus } });
+
+            const response = await fetch(url, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'Accept': 'application/json',
                 },
                 body: JSON.stringify({ status: newStatus }),
             });
 
-            if (!response.ok) throw new Error('Failed to update status');
+            const data = await response.json();
+            console.log('📥 API Response:', { status: response.status, data });
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to update status');
+            }
 
             toast.success(`Schedule moved to ${newStatus.replace('_', ' ')}`);
-            dtRef.current?.reload();
+            // Only reload DataTable if in list view
+            if (viewMode === 'list') {
+                dtRef.current?.reload();
+            }
+            console.log('✅ Update successful');
         } catch (error) {
-            setSchedules(schedules);
-            toast.error('Failed to update schedule status');
-            console.error('Update error:', error);
+            // Rollback optimistic update
+            setSchedules(originalSchedules);
+            toast.error(error instanceof Error ? error.message : 'Failed to update schedule status');
+            console.error('❌ Update failed:', error);
         }
     };
 
@@ -412,7 +456,12 @@ export default function ScheduleIndex({ lines, schedules: initialSchedules }: Sc
                         </div>
 
                         {/* Kanban Board */}
-                        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragStart={handleDragStart}
+                            onDragEnd={handleDragEnd}
+                        >
                             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                                 {kanbanColumns.map((column) => (
                                     <KanbanColumnDroppable

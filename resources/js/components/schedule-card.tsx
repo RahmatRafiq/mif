@@ -40,12 +40,19 @@ export default function ScheduleCard({ schedule, onView }: ScheduleCardProps) {
         <Card
             ref={setNodeRef}
             style={style}
-            className={`mb-3 cursor-pointer border-l-4 transition-shadow hover:shadow-md ${colorClass}`}
-            onClick={() => onView && onView(schedule)}
+            {...attributes}
+            {...listeners}
+            className={`mb-3 cursor-move border-l-4 transition-shadow hover:shadow-md ${colorClass}`}
         >
             <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
-                    <div className="flex-1">
+                    <div
+                        className="flex-1"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onView && onView(schedule);
+                        }}
+                    >
                         <CardTitle className="text-sm font-semibold">
                             <div className="flex items-center gap-2">
                                 <Package className="h-4 w-4 text-muted-foreground" />
@@ -54,7 +61,7 @@ export default function ScheduleCard({ schedule, onView }: ScheduleCardProps) {
                         </CardTitle>
                         <p className="mt-1 text-xs text-muted-foreground">{schedule.order?.product_name || 'No product name'}</p>
                     </div>
-                    <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
+                    <div className="cursor-grab active:cursor-grabbing">
                         <GripVertical className="h-5 w-5 text-muted-foreground" />
                     </div>
                 </div>
