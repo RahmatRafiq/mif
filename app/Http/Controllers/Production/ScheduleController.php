@@ -201,7 +201,6 @@ class ScheduleController extends Controller
 
     /**
      * Input actual output for a specific day
-     * AJAX endpoint
      */
     public function inputActualOutput(InputActualOutputRequest $request)
     {
@@ -211,15 +210,9 @@ class ScheduleController extends Controller
                 $request->input('actual_output')
             );
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Actual output recorded successfully. Balancing applied if needed.',
-            ]);
+            return back()->with('success', 'Actual output recorded successfully. Balancing applied if needed.');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
+            return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
 
