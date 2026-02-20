@@ -115,15 +115,23 @@ export default function ActivityLogList() {
                     <Database className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm font-medium text-foreground">Data Changes</span>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                     {Object.keys(properties.attributes).map((key) => (
-                        <div key={key} className="grid grid-cols-1 gap-2 text-sm md:grid-cols-3">
+                        <div key={key} className="space-y-1 md:space-y-0">
                             <div className="font-medium text-foreground">{key}</div>
-                            <div className="text-destructive line-through">
-                                {String(properties.old![key] || '-')}
-                            </div>
-                            <div className="text-green-600 dark:text-green-400">
-                                {String(properties.attributes![key] || '-')}
+                            <div className="grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-muted-foreground md:hidden">Old:</span>
+                                    <span className="text-destructive line-through">
+                                        {String(properties.old![key] || '-')}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-muted-foreground md:hidden">New:</span>
+                                    <span className="text-green-600 dark:text-green-400">
+                                        {String(properties.attributes![key] || '-')}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -140,7 +148,7 @@ export default function ActivityLogList() {
                 <div className="flex flex-col gap-6">
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                         <Heading title="Live Activity Logs" description="Monitor real-time user activities and system changes" />
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-wrap items-center gap-3 md:gap-4">
                             {connectionStatus === 'connected' && (
                                 <Badge variant="outline" className="gap-1 border-green-500/50 bg-green-500/10 text-green-600 dark:text-green-400">
                                     <Wifi className="h-3 w-3" />
@@ -189,29 +197,31 @@ export default function ActivityLogList() {
                             {logs.map((log, index) => (
                                 <Card key={log.id} className={`transition-all duration-300 ${index === 0 ? 'ring-2 ring-primary/20' : ''}`}>
                                     <CardHeader>
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1">
+                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                            <div className="flex-1 min-w-0">
                                                 <CardTitle className="text-base font-medium text-foreground">
                                                     {log.description || 'Unknown activity'}
                                                 </CardTitle>
-                                                <CardDescription className="mt-1 flex items-center gap-4 text-sm">
+                                                <CardDescription className="mt-1 flex flex-wrap items-center gap-2 text-sm md:gap-4">
                                                     <div className="flex items-center gap-1">
-                                                        <User className="h-3 w-3" />
-                                                        {log.causer_name || `${formatSubjectType(log.causer_type)} #${log.causer_id || 'N/A'}`}
+                                                        <User className="h-3 w-3 flex-shrink-0" />
+                                                        <span className="truncate">{log.causer_name || `${formatSubjectType(log.causer_type)} #${log.causer_id || 'N/A'}`}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1">
-                                                        <Database className="h-3 w-3" />
-                                                        {formatSubjectType(log.subject_type)}
+                                                        <Database className="h-3 w-3 flex-shrink-0" />
+                                                        <span className="truncate">{formatSubjectType(log.subject_type)}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1">
-                                                        <Clock className="h-3 w-3" />
-                                                        {new Date(log.created_at).toLocaleString('en-US', {
-                                                            day: '2-digit',
-                                                            month: 'short',
-                                                            year: 'numeric',
-                                                            hour: '2-digit',
-                                                            minute: '2-digit',
-                                                        })}
+                                                        <Clock className="h-3 w-3 flex-shrink-0" />
+                                                        <span className="truncate">
+                                                            {new Date(log.created_at).toLocaleString('en-US', {
+                                                                day: '2-digit',
+                                                                month: 'short',
+                                                                year: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit',
+                                                            })}
+                                                        </span>
                                                     </div>
                                                 </CardDescription>
                                             </div>
