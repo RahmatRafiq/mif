@@ -27,11 +27,11 @@ class ScheduleController extends Controller
     public function index()
     {
         $lines = $this->lineService->getActiveLines();
-        $orders = $this->orderService->getSchedulableOrders();
+        $schedules = $this->scheduleService->getAllSchedules();
 
         return Inertia::render('Production/Schedule/Index', [
             'lines' => $lines,
-            'orders' => $orders,
+            'schedules' => $schedules,
         ]);
     }
 
@@ -240,5 +240,62 @@ class ScheduleController extends Controller
         return response()->json([
             'available' => $isAvailable,
         ]);
+    }
+
+    /**
+     * Display Kanban board view
+     */
+    public function kanban()
+    {
+        $lines = $this->lineService->getActiveLines();
+        $schedules = $this->scheduleService->getAllSchedules();
+
+        return Inertia::render('Production/Schedule/Kanban', [
+            'lines' => $lines,
+            'initialSchedules' => $schedules,
+        ]);
+    }
+
+    /**
+     * Get schedules data for Kanban board (AJAX)
+     */
+    public function kanbanData(Request $request)
+    {
+        $lineId = $request->input('line_id');
+
+        $schedules = $lineId
+            ? $this->scheduleService->getSchedulesByLine($lineId)
+            : $this->scheduleService->getAllSchedules();
+
+        return response()->json([
+            'schedules' => $schedules,
+        ]);
+    }
+
+    /**
+     * Update schedule status (for Kanban drag & drop)
+     * AJAX endpoint
+     */
+    public function updateStatus(Request $request, int $id)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,in_progress,delayed,completed',
+        ]);
+
+        try {
+            $this->scheduleService->updateSchedule($id, [
+                'status' => $request->input('status'),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Schedule status updated successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
     }
 }

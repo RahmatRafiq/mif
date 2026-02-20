@@ -94,6 +94,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('schedules/input-actual', [\App\Http\Controllers\Production\ScheduleController::class, 'inputActualOutput'])->name('schedules.input-actual');
             Route::get('schedules/timeline', [\App\Http\Controllers\Production\ScheduleController::class, 'timeline'])->name('schedules.timeline');
             Route::post('schedules/check-availability', [\App\Http\Controllers\Production\ScheduleController::class, 'checkAvailability'])->name('schedules.check-availability');
+            Route::get('schedules/kanban', [\App\Http\Controllers\Production\ScheduleController::class, 'kanban'])->name('schedules.kanban');
+            Route::get('schedules/kanban/data', [\App\Http\Controllers\Production\ScheduleController::class, 'kanbanData'])->name('schedules.kanban.data');
+            Route::patch('schedules/{schedule}/status', [\App\Http\Controllers\Production\ScheduleController::class, 'updateStatus'])->name('schedules.update-status');
             Route::resource('schedules', \App\Http\Controllers\Production\ScheduleController::class);
         });
     });

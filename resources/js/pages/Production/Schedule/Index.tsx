@@ -1,16 +1,46 @@
 import DataTableWrapper, { DataTableWrapperRef } from '@/components/datatables';
 import Heading from '@/components/heading';
 import PageContainer from '@/components/page-container';
+import ScheduleCard from '@/components/schedule-card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import type { DataTableColumn } from '@/types/DataTables';
-import type { Schedule } from '@/types/production';
+import type { Line, Schedule } from '@/types/production';
+import { toast } from '@/utils/toast';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
-import { useRef } from 'react';
+import { CalendarDays, Grid3x3, LayoutList, Loader2, Plus, RefreshCw } from 'lucide-react';
+import { useRef, useState } from 'react';
 
-const columns: DataTableColumn<Schedule>[] = [
+interface ScheduleIndexProps {
+    lines: Line[];
+    schedules?: Schedule[];
+}
+
+type ViewMode = 'list' | 'kanban';
+type ScheduleStatus = 'pending' | 'in_progress' | 'completed' | 'delayed';
+
+interface KanbanColumn {
+    id: ScheduleStatus;
+    title: string;
+    description: string;
+    color: string;
+}
+
+const kanbanColumns: KanbanColumn[] = [
+    { id: 'pending', title: 'Pending', description: 'Not started yet', color: 'border-slate-500/50 bg-slate-500/10' },
+    { id: 'in_progress', title: 'In Progress', description: 'Currently in production', color: 'border-blue-500/50 bg-blue-500/10' },
+    { id: 'delayed', title: 'Delayed', description: 'Behind schedule', color: 'border-red-500/50 bg-red-500/10' },
+    { id: 'completed', title: 'Completed', description: 'Finished', color: 'border-green-500/50 bg-green-500/10' },
+];
+
+const tableColumns: DataTableColumn<Schedule>[] = [
     { data: 'id', title: 'ID', className: 'desktop', width: '60px' },
     {
         data: 'order',
@@ -55,13 +85,13 @@ const columns: DataTableColumn<Schedule>[] = [
         className: 'all',
         render: (_data, _type, row: Schedule) => {
             const statusColors = {
-                pending: 'bg-gray-50 text-gray-700 ring-gray-600/20',
-                in_progress: 'bg-blue-50 text-blue-700 ring-blue-600/20',
-                completed: 'bg-green-50 text-green-700 ring-green-600/20',
-                delayed: 'bg-red-50 text-red-700 ring-red-600/20',
+                pending: 'border-slate-500/50 bg-slate-500/10 text-slate-600 dark:text-slate-400',
+                in_progress: 'border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400',
+                completed: 'border-green-500/50 bg-green-500/10 text-green-600 dark:text-green-400',
+                delayed: 'border-red-500/50 bg-red-500/10 text-red-600 dark:text-red-400',
             };
             const colorClass = statusColors[row.status] || statusColors.pending;
-            return `<span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${colorClass}">${row.status.replace('_', ' ').toUpperCase()}</span>`;
+            return `<span class="inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium ${colorClass}">${row.status.replace('_', ' ').toUpperCase()}</span>`;
         },
     },
     {
@@ -83,38 +113,196 @@ const columns: DataTableColumn<Schedule>[] = [
     },
 ];
 
-export default function ScheduleIndex() {
+export default function ScheduleIndex({ lines, schedules: initialSchedules }: ScheduleIndexProps) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Production' },
+        { title: 'Production', href: '#' },
         { title: 'Schedules', href: route('production.schedules.index') },
     ];
+
     const dtRef = useRef<DataTableWrapperRef>(null);
+    const [viewMode, setViewMode] = useState<ViewMode>('list');
+    const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules || []);
+    const [selectedLine, setSelectedLine] = useState<string>('all');
+    const [activeId, setActiveId] = useState<number | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
+    );
+
+    // Filter schedules by line
+    const filteredSchedules = selectedLine === 'all' ? schedules : schedules.filter((s) => s.line?.id === parseInt(selectedLine));
+
+    // Group by status for Kanban
+    const schedulesByStatus = kanbanColumns.reduce(
+        (acc, column) => {
+            acc[column.id] = filteredSchedules.filter((s) => s.status === column.id);
+            return acc;
+        },
+        {} as Record<ScheduleStatus, Schedule[]>,
+    );
+
+    const fetchSchedules = async (lineId?: string) => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(route('production.schedules.kanban.data', { line_id: lineId || undefined }));
+            const data = await response.json();
+            setSchedules(data.schedules);
+        } catch (error) {
+            toast.error('Failed to fetch schedules');
+            console.error('Fetch error:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleLineChange = (value: string) => {
+        setSelectedLine(value);
+        if (viewMode === 'kanban') {
+            fetchSchedules(value === 'all' ? undefined : value);
+        }
+    };
+
+    const handleDragStart = (event: DragStartEvent) => {
+        setActiveId(event.active.id as number);
+    };
+
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+        setActiveId(null);
+
+        if (!over) return;
+
+        const scheduleId = active.id as number;
+        const newStatus = over.id as ScheduleStatus;
+        const schedule = schedules.find((s) => s.id === scheduleId);
+
+        if (!schedule || schedule.status === newStatus) return;
+
+        // Optimistic update
+        const updatedSchedules = schedules.map((s) => (s.id === scheduleId ? { ...s, status: newStatus } : s));
+        setSchedules(updatedSchedules);
+
+        try {
+            const response = await fetch(route('production.schedules.update-status', scheduleId), {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({ status: newStatus }),
+            });
+
+            if (!response.ok) throw new Error('Failed to update status');
+
+            toast.success(`Schedule moved to ${newStatus.replace('_', ' ')}`);
+            dtRef.current?.reload();
+        } catch (error) {
+            setSchedules(schedules);
+            toast.error('Failed to update schedule status');
+            console.error('Update error:', error);
+        }
+    };
+
+    const handleViewSchedule = (schedule: Schedule) => {
+        router.visit(route('production.schedules.show', schedule.id));
+    };
 
     const handleDelete = (id: number) => {
         router.delete(route('production.schedules.destroy', id), {
-            onSuccess: () => dtRef.current?.reload(),
+            onSuccess: () => {
+                dtRef.current?.reload();
+                if (viewMode === 'kanban') {
+                    fetchSchedules(selectedLine === 'all' ? undefined : selectedLine);
+                }
+            },
         });
     };
+
+    const handleRefresh = () => {
+        if (viewMode === 'list') {
+            dtRef.current?.reload();
+        } else {
+            fetchSchedules(selectedLine === 'all' ? undefined : selectedLine);
+        }
+    };
+
+    const activeSchedule = schedules.find((s) => s.id === activeId);
+
+    const lineOptions = [
+        { value: 'all', label: 'All Lines' },
+        ...lines.map((line) => ({
+            value: line.id.toString(),
+            label: `${line.code} - ${line.name}`,
+        })),
+    ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Production Schedules" />
             <PageContainer maxWidth="full">
-                <div className="flex items-center justify-between">
+                {/* Header */}
+                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <Heading title="Production Schedules" description="Manage production schedules and track daily output" />
-                    <Link href={route('production.schedules.create')}>
-                        <Button>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add Schedule
+
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* View Toggle */}
+                        <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as ViewMode)}>
+                            <ToggleGroupItem value="list" aria-label="List view" className="gap-2">
+                                <LayoutList className="h-4 w-4" />
+                                <span className="hidden sm:inline">List</span>
+                            </ToggleGroupItem>
+                            <ToggleGroupItem value="kanban" aria-label="Kanban view" className="gap-2">
+                                <Grid3x3 className="h-4 w-4" />
+                                <span className="hidden sm:inline">Kanban</span>
+                            </ToggleGroupItem>
+                        </ToggleGroup>
+
+                        {/* Line Filter (Kanban only) */}
+                        {viewMode === 'kanban' && (
+                            <div className="flex items-center gap-2">
+                                <Label htmlFor="line-filter" className="whitespace-nowrap text-sm">
+                                    Line:
+                                </Label>
+                                <Select value={selectedLine} onValueChange={handleLineChange}>
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder="Select line" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {lineOptions.map((option) => (
+                                            <SelectItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
+                            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                            Refresh
                         </Button>
-                    </Link>
+
+                        <Button size="sm" asChild>
+                            <Link href={route('production.schedules.create')}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                New Schedule
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
 
-                <div className="mt-6">
+                {/* List View */}
+                {viewMode === 'list' && (
                     <DataTableWrapper
                         ref={dtRef}
                         ajax={{ url: route('production.schedules.json'), type: 'POST' }}
-                        columns={columns}
+                        columns={tableColumns}
                         onRowDelete={handleDelete}
                         confirmationConfig={{
                             delete: {
@@ -126,7 +314,68 @@ export default function ScheduleIndex() {
                             },
                         }}
                     />
-                </div>
+                )}
+
+                {/* Kanban View */}
+                {viewMode === 'kanban' && (
+                    <>
+                        {/* Stats Summary */}
+                        <div className="mb-6 grid gap-4 md:grid-cols-4">
+                            {kanbanColumns.map((column) => {
+                                const count = schedulesByStatus[column.id]?.length || 0;
+                                const Icon = column.id === 'pending' ? CalendarDays : column.id === 'in_progress' ? Loader2 : column.id === 'delayed' ? RefreshCw : Plus;
+                                return (
+                                    <Card key={column.id} className={`border-l-4 ${column.color}`}>
+                                        <CardContent className="flex items-center justify-between p-4">
+                                            <div>
+                                                <p className="text-sm font-medium text-muted-foreground">{column.title}</p>
+                                                <h3 className="text-2xl font-bold">{count}</h3>
+                                                <p className="text-xs text-muted-foreground">{column.description}</p>
+                                            </div>
+                                            <Icon className="h-8 w-8 text-muted-foreground opacity-50" />
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </div>
+
+                        {/* Kanban Board */}
+                        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                                {kanbanColumns.map((column) => {
+                                    const columnSchedules = schedulesByStatus[column.id] || [];
+
+                                    return (
+                                        <Card key={column.id} className="flex h-[calc(100vh-450px)] min-h-[500px] flex-col">
+                                            <CardHeader className={`border-b ${column.color}`}>
+                                                <CardTitle className="flex items-center justify-between text-base">
+                                                    <span>{column.title}</span>
+                                                    <span className="rounded-full bg-background px-2.5 py-0.5 text-sm font-semibold">{columnSchedules.length}</span>
+                                                </CardTitle>
+                                            </CardHeader>
+
+                                            <CardContent className="flex-1 overflow-y-auto p-3">
+                                                <SortableContext items={columnSchedules.map((s) => s.id)} strategy={verticalListSortingStrategy} id={column.id}>
+                                                    {columnSchedules.length === 0 ? (
+                                                        <div className="flex h-32 items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25">
+                                                            <p className="text-sm text-muted-foreground">No schedules</p>
+                                                        </div>
+                                                    ) : (
+                                                        columnSchedules.map((schedule) => (
+                                                            <ScheduleCard key={schedule.id} schedule={schedule} onView={handleViewSchedule} />
+                                                        ))
+                                                    )}
+                                                </SortableContext>
+                                            </CardContent>
+                                        </Card>
+                                    );
+                                })}
+                            </div>
+
+                            <DragOverlay>{activeSchedule ? <ScheduleCard schedule={activeSchedule} /> : null}</DragOverlay>
+                        </DndContext>
+                    </>
+                )}
             </PageContainer>
         </AppLayout>
     );
