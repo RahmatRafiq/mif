@@ -319,10 +319,20 @@ export default function ScheduleIndex({ lines, schedules: initialSchedules }: Sc
             <Head title="Production Schedules" />
             <PageContainer maxWidth="full">
                 {/* Header */}
-                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <Heading title="Production Schedules" description="Manage production schedules and track daily output" />
+                <div className="mb-6">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <Heading title="Production Schedules" description="Manage production schedules and track daily output" />
 
-                    <div className="flex flex-wrap items-center gap-3">
+                        <Button size="sm" asChild>
+                            <Link href={route('production.schedules.create')}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                New Schedule
+                            </Link>
+                        </Button>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="mt-4 flex flex-wrap items-center gap-3">
                         {/* View Toggle */}
                         <ToggleTabs
                             tabs={['kanban', 'list']}
@@ -358,13 +368,6 @@ export default function ScheduleIndex({ lines, schedules: initialSchedules }: Sc
                         <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
                             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
                             Refresh
-                        </Button>
-
-                        <Button size="sm" asChild>
-                            <Link href={route('production.schedules.create')}>
-                                <Plus className="mr-2 h-4 w-4" />
-                                New Schedule
-                            </Link>
                         </Button>
                     </div>
                 </div>
