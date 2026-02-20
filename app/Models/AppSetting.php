@@ -10,6 +10,7 @@ class AppSetting extends Model
     use HasFactory;
 
     protected $fillable = [
+        'id',
         'app_name',
         'app_description',
         'app_logo',
@@ -44,6 +45,7 @@ class AppSetting extends Model
         $settings = static::firstOrCreate(
             ['id' => 1],
             [
+                'id' => 1,
                 'app_name' => 'Laravel App',
                 'primary_color' => '#3b82f6',
                 'secondary_color' => '#6b7280',

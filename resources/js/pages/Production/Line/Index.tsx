@@ -45,7 +45,7 @@ const columns: DataTableColumn<Line>[] = [
 
 export default function LineIndex() {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Production', href: '#' },
+        { title: 'Production' },
         { title: 'Lines', href: route('production.lines.index') },
     ];
     const dtRef = useRef<DataTableWrapperRef>(null);

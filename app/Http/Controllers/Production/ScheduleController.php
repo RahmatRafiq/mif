@@ -62,7 +62,30 @@ class ScheduleController extends Controller
             $query->where('line_id', $request->input('line_id'));
         }
 
-        return DataTable::paginate($query, $request);
+        $data = DataTable::paginate($query, $request);
+
+        // Transform data to flatten relationships for DataTables
+        $data['data'] = collect($data['data'])->map(function ($schedule) {
+            $completionPercentage = $schedule->qty_total_target > 0
+                ? round(($schedule->qty_completed / $schedule->qty_total_target) * 100, 1)
+                : 0;
+
+            return [
+                'id' => $schedule->id,
+                'order' => $schedule->order,
+                'line' => $schedule->line,
+                'start_date' => $schedule->start_date->format('Y-m-d'),
+                'finish_date' => $schedule->finish_date->format('Y-m-d'),
+                'current_finish_date' => $schedule->current_finish_date->format('Y-m-d'),
+                'qty_total_target' => $schedule->qty_total_target,
+                'qty_completed' => $schedule->qty_completed,
+                'completion_percentage' => $completionPercentage,
+                'status' => $schedule->status,
+                'days_extended' => $schedule->days_extended,
+            ];
+        });
+
+        return response()->json($data);
     }
 
     /**

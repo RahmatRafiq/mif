@@ -85,7 +85,7 @@ const columns: DataTableColumn<Schedule>[] = [
 
 export default function ScheduleIndex() {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Production', href: '#' },
+        { title: 'Production' },
         { title: 'Schedules', href: route('production.schedules.index') },
     ];
     const dtRef = useRef<DataTableWrapperRef>(null);
