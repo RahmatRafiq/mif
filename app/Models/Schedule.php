@@ -7,11 +7,12 @@ use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\Traits\LogsActivity as LogsActivityTrait;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Schedule extends Model
 {
-    use HasFactory, LogsActivityTrait, SoftDeletes;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'order_id',
@@ -35,9 +36,16 @@ class Schedule extends Model
         'days_extended' => 'integer',
     ];
 
-    protected static $logAttributes = ['order_id', 'line_id', 'start_date', 'finish_date', 'status'];
-
-    protected static $logName = 'schedule';
+    /**
+     * Get the options for activity logging.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['order_id', 'line_id', 'start_date', 'finish_date', 'current_finish_date', 'qty_total_target', 'qty_completed', 'days_extended', 'status'])
+            ->logOnlyDirty()
+            ->setDescriptionForEvent(fn (string $eventName) => "Schedule for Order #{$this->order_id} on Line #{$this->line_id} (ID: {$this->id}) was {$eventName}");
+    }
 
     /**
      * Relationship: Schedule belongs to Order

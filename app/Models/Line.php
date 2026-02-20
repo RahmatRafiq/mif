@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\LogsActivity;
-use Spatie\Activitylog\Traits\LogsActivity as LogsActivityTrait;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Line extends Model
 {
-    use HasFactory, LogsActivityTrait, SoftDeletes;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $table = 'master_lines';
 
@@ -27,9 +27,16 @@ class Line extends Model
         'capacity_per_day' => 'integer',
     ];
 
-    protected static $logAttributes = ['name', 'code', 'is_active'];
-
-    protected static $logName = 'line';
+    /**
+     * Get the options for activity logging.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'code', 'description', 'capacity_per_day', 'is_active'])
+            ->logOnlyDirty()
+            ->setDescriptionForEvent(fn (string $eventName) => "Line {$this->name} (ID: {$this->id}) was {$eventName}");
+    }
 
     /**
      * Relationship: Line has many Schedules

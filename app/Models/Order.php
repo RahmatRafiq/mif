@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\Traits\LogsActivity as LogsActivityTrait;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Order extends Model
 {
-    use HasFactory, LogsActivityTrait, SoftDeletes;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $table = 'master_orders';
 
@@ -31,9 +32,16 @@ class Order extends Model
         'due_date' => 'date',
     ];
 
-    protected static $logAttributes = ['order_number', 'product_name', 'qty_total', 'status'];
-
-    protected static $logName = 'order';
+    /**
+     * Get the options for activity logging.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['order_number', 'product_name', 'product_code', 'qty_total', 'customer', 'status'])
+            ->logOnlyDirty()
+            ->setDescriptionForEvent(fn (string $eventName) => "Order {$this->order_number} (ID: {$this->id}) was {$eventName}");
+    }
 
     /**
      * Relationship: Order has many Schedules

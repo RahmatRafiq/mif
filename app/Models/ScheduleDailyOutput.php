@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity as LogsActivityTrait;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class ScheduleDailyOutput extends Model
 {
-    use HasFactory, LogsActivityTrait;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'schedule_id',
@@ -28,9 +29,16 @@ class ScheduleDailyOutput extends Model
         'is_completed' => 'boolean',
     ];
 
-    protected static $logAttributes = ['date', 'target_output', 'actual_output', 'balance'];
-
-    protected static $logName = 'daily_output';
+    /**
+     * Get the options for activity logging.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['schedule_id', 'date', 'target_output', 'actual_output', 'balance', 'is_completed'])
+            ->logOnlyDirty()
+            ->setDescriptionForEvent(fn (string $eventName) => "Daily output for Schedule #{$this->schedule_id} on {$this->date} (ID: {$this->id}) was {$eventName}");
+    }
 
     /**
      * Relationship: Daily Output belongs to Schedule
