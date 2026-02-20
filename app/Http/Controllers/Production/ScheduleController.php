@@ -161,9 +161,14 @@ class ScheduleController extends Controller
         $lines = $this->lineService->getActiveLines();
         $orders = $this->orderService->getSchedulableOrders();
 
+        // Format dates for HTML date inputs
+        $formattedSchedule = $schedule->toArray();
+        $formattedSchedule['start_date'] = $schedule->start_date?->format('Y-m-d');
+        $formattedSchedule['finish_date'] = $schedule->finish_date?->format('Y-m-d');
+
         return Inertia::render('Production/Schedule/Form', [
             'editMode' => true,
-            'schedule' => $schedule,
+            'schedule' => $formattedSchedule,
             'lines' => $lines,
             'orders' => $orders,
         ]);

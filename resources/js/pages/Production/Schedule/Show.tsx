@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { Schedule, ScheduleDailyOutput } from '@/types/production';
+import { toast } from '@/utils/toast';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { AlertCircle, Calendar, CheckCircle2, Package, TrendingUp } from 'lucide-react';
 import { FormEvent, useState } from 'react';
@@ -35,6 +36,10 @@ export default function ScheduleShow({ schedule }: ScheduleShowProps) {
             onSuccess: () => {
                 setEditingDailyOutputId(null);
                 reset();
+                toast.success('Actual output recorded successfully. Balancing applied if needed.');
+            },
+            onError: () => {
+                toast.error('Failed to record actual output');
             },
         });
     };

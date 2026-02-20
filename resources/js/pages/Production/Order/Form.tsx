@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { Order } from '@/types/production';
+import { toast } from '@/utils/toast';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
 
@@ -35,9 +36,15 @@ export default function OrderForm({ order }: { order?: Order }) {
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
         if (isEdit) {
-            put(route('production.orders.update', order!.id));
+            put(route('production.orders.update', order!.id), {
+                onSuccess: () => toast.success('Order updated successfully'),
+                onError: () => toast.error('Failed to update order'),
+            });
         } else {
-            post(route('production.orders.store'));
+            post(route('production.orders.store'), {
+                onSuccess: () => toast.success('Order created successfully'),
+                onError: () => toast.error('Failed to create order'),
+            });
         }
     };
 

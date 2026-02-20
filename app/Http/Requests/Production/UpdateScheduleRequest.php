@@ -46,9 +46,21 @@ class UpdateScheduleRequest extends FormRequest
             if ($this->filled(['order_id', 'qty_total_target'])) {
                 $order = Order::find($this->input('order_id'));
                 if ($order) {
+                    // Get current schedule to check if order_id changed
+                    $currentSchedule = \App\Models\Schedule::find($scheduleId);
+                    $currentScheduleQty = 0;
+
+                    // Only add back current schedule qty if editing same order
+                    if ($currentSchedule && $currentSchedule->order_id == $this->input('order_id')) {
+                        $currentScheduleQty = $currentSchedule->qty_total_target;
+                    }
+
+                    // Calculate available qty (remaining + current schedule's qty if same order)
                     $remainingQty = $order->remaining_qty ?? $order->qty_total;
-                    if ($this->input('qty_total_target') > $remainingQty) {
-                        $validator->errors()->add('qty_total_target', "Target quantity ({$this->input('qty_total_target')}) exceeds order remaining quantity ({$remainingQty}).");
+                    $availableQty = $remainingQty + $currentScheduleQty;
+
+                    if ($this->input('qty_total_target') > $availableQty) {
+                        $validator->errors()->add('qty_total_target', "Target quantity ({$this->input('qty_total_target')}) exceeds available quantity ({$availableQty}).");
                     }
                 }
             }

@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { Line, Order, Schedule } from '@/types/production';
+import { toast } from '@/utils/toast';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEvent, useEffect, useState } from 'react';
 
@@ -42,9 +43,15 @@ export default function ScheduleForm({ schedule, orders = [], lines = [] }: Sche
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
         if (isEdit) {
-            put(route('production.schedules.update', schedule!.id));
+            put(route('production.schedules.update', schedule!.id), {
+                onSuccess: () => toast.success('Schedule updated successfully'),
+                onError: () => toast.error('Failed to update schedule'),
+            });
         } else {
-            post(route('production.schedules.store'));
+            post(route('production.schedules.store'), {
+                onSuccess: () => toast.success('Schedule created successfully with daily targets'),
+                onError: () => toast.error('Failed to create schedule'),
+            });
         }
     };
 

@@ -79,9 +79,14 @@ class OrderController extends Controller
     {
         $order = $this->orderService->getOrder($id);
 
+        // Format dates for HTML date inputs
+        $formattedOrder = $order->toArray();
+        $formattedOrder['order_date'] = $order->order_date?->format('Y-m-d');
+        $formattedOrder['due_date'] = $order->due_date?->format('Y-m-d');
+
         return Inertia::render('Production/Order/Form', [
             'editMode' => true,
-            'order' => $order,
+            'order' => $formattedOrder,
         ]);
     }
 

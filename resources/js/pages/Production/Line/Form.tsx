@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { Line } from '@/types/production';
+import { toast } from '@/utils/toast';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
 
@@ -31,9 +32,15 @@ export default function LineForm({ line }: { line?: Line }) {
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
         if (isEdit) {
-            put(route('production.lines.update', line!.id));
+            put(route('production.lines.update', line!.id), {
+                onSuccess: () => toast.success('Line updated successfully'),
+                onError: () => toast.error('Failed to update line'),
+            });
         } else {
-            post(route('production.lines.store'));
+            post(route('production.lines.store'), {
+                onSuccess: () => toast.success('Line created successfully'),
+                onError: () => toast.error('Failed to create line'),
+            });
         }
     };
 
