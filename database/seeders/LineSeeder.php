@@ -41,9 +41,9 @@ class LineSeeder extends Seeder
             [
                 'name' => 'Line E',
                 'code' => 'L005',
-                'description' => 'Backup line - currently inactive',
+                'description' => 'Backup line for overflow production',
                 'capacity_per_day' => 400,
-                'is_active' => false,
+                'is_active' => true,
             ],
         ];
 
