@@ -47,3 +47,11 @@ export type {
     DataTableWrapperProps,
     DataTableWrapperRef,
 } from './DataTables';
+
+// Global Window Extensions
+declare global {
+    interface Window {
+        Echo: any;
+        Pusher: any;
+    }
+}

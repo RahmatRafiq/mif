@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\ScheduleUpdated;
 use App\Models\Schedule;
 use App\Models\ScheduleDailyOutput;
 use App\Repositories\Contracts\OrderRepositoryInterface;
@@ -327,7 +328,12 @@ class ScheduleService
 
             DB::commit();
 
-            return $this->scheduleRepository->find($id)->load(['order', 'line', 'dailyOutputs']);
+            $updatedSchedule = $this->scheduleRepository->find($id)->load(['order', 'line', 'dailyOutputs']);
+
+            // Broadcast schedule update event
+            broadcast(new ScheduleUpdated($updatedSchedule))->toOthers();
+
+            return $updatedSchedule;
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;

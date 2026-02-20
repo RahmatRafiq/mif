@@ -12,11 +12,11 @@ import type { BreadcrumbItem } from '@/types';
 import type { DataTableColumn } from '@/types/DataTables';
 import type { Line, Schedule } from '@/types/production';
 import { toast } from '@/utils/toast';
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Head, Link, router } from '@inertiajs/react';
 import { CalendarDays, Grid3x3, LayoutList, Loader2, Plus, RefreshCw } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface ScheduleIndexProps {
     lines: Line[];
@@ -39,6 +39,60 @@ const kanbanColumns: KanbanColumn[] = [
     { id: 'delayed', title: 'Delayed', description: 'Behind schedule', color: 'border-red-500/50 bg-red-500/10' },
     { id: 'completed', title: 'Completed', description: 'Finished', color: 'border-green-500/50 bg-green-500/10' },
 ];
+
+// Droppable Column Component
+function KanbanColumnDroppable({
+    column,
+    schedules,
+    onView
+}: {
+    column: KanbanColumn;
+    schedules: Schedule[];
+    onView: (schedule: Schedule) => void;
+}) {
+    const { setNodeRef, isOver } = useDroppable({
+        id: column.id,
+    });
+
+    const textColorClass = {
+        pending: 'text-slate-600 dark:text-slate-400',
+        in_progress: 'text-blue-600 dark:text-blue-400',
+        delayed: 'text-red-600 dark:text-red-400',
+        completed: 'text-green-600 dark:text-green-400',
+    }[column.id];
+
+    return (
+        <Card className="flex h-[calc(100vh-450px)] min-h-[500px] flex-col">
+            <CardHeader className={`border-b ${column.color}`}>
+                <CardTitle className={`flex items-center justify-between text-base ${textColorClass}`}>
+                    <span>{column.title}</span>
+                    <span className="rounded-full bg-background px-2.5 py-0.5 text-sm font-semibold">
+                        {schedules.length}
+                    </span>
+                </CardTitle>
+            </CardHeader>
+
+            <CardContent
+                ref={setNodeRef}
+                className={`flex-1 overflow-y-auto p-3 transition-colors ${
+                    isOver ? 'bg-accent/50' : ''
+                }`}
+            >
+                <SortableContext items={schedules.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+                    {schedules.length === 0 ? (
+                        <div className="flex h-32 items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25">
+                            <p className="text-sm text-muted-foreground">No schedules</p>
+                        </div>
+                    ) : (
+                        schedules.map((schedule) => (
+                            <ScheduleCard key={schedule.id} schedule={schedule} onView={onView} />
+                        ))
+                    )}
+                </SortableContext>
+            </CardContent>
+        </Card>
+    );
+}
 
 const tableColumns: DataTableColumn<Schedule>[] = [
     { data: 'id', title: 'ID', className: 'desktop', width: '60px' },
@@ -133,6 +187,24 @@ export default function ScheduleIndex({ lines, schedules: initialSchedules }: Sc
             },
         }),
     );
+
+    // WebSocket real-time updates
+    useEffect(() => {
+        if (viewMode !== 'kanban') return;
+
+        const channel = window.Echo.channel('schedules');
+
+        channel.listen('.ScheduleUpdated', () => {
+            // Refresh schedules when any schedule is updated
+            fetchSchedules(selectedLine === 'all' ? undefined : selectedLine);
+            toast.success('Schedule updated by another user');
+        });
+
+        return () => {
+            channel.stopListening('.ScheduleUpdated');
+            window.Echo.leaveChannel('schedules');
+        };
+    }, [viewMode, selectedLine]);
 
     // Filter schedules by line
     const filteredSchedules = selectedLine === 'all' ? schedules : schedules.filter((s) => s.line?.id === parseInt(selectedLine));
@@ -342,34 +414,14 @@ export default function ScheduleIndex({ lines, schedules: initialSchedules }: Sc
                         {/* Kanban Board */}
                         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                                {kanbanColumns.map((column) => {
-                                    const columnSchedules = schedulesByStatus[column.id] || [];
-
-                                    return (
-                                        <Card key={column.id} className="flex h-[calc(100vh-450px)] min-h-[500px] flex-col">
-                                            <CardHeader className={`border-b ${column.color}`}>
-                                                <CardTitle className="flex items-center justify-between text-base">
-                                                    <span>{column.title}</span>
-                                                    <span className="rounded-full bg-background px-2.5 py-0.5 text-sm font-semibold">{columnSchedules.length}</span>
-                                                </CardTitle>
-                                            </CardHeader>
-
-                                            <CardContent className="flex-1 overflow-y-auto p-3">
-                                                <SortableContext items={columnSchedules.map((s) => s.id)} strategy={verticalListSortingStrategy} id={column.id}>
-                                                    {columnSchedules.length === 0 ? (
-                                                        <div className="flex h-32 items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25">
-                                                            <p className="text-sm text-muted-foreground">No schedules</p>
-                                                        </div>
-                                                    ) : (
-                                                        columnSchedules.map((schedule) => (
-                                                            <ScheduleCard key={schedule.id} schedule={schedule} onView={handleViewSchedule} />
-                                                        ))
-                                                    )}
-                                                </SortableContext>
-                                            </CardContent>
-                                        </Card>
-                                    );
-                                })}
+                                {kanbanColumns.map((column) => (
+                                    <KanbanColumnDroppable
+                                        key={column.id}
+                                        column={column}
+                                        schedules={schedulesByStatus[column.id] || []}
+                                        onView={handleViewSchedule}
+                                    />
+                                ))}
                             </div>
 
                             <DragOverlay>{activeSchedule ? <ScheduleCard schedule={activeSchedule} /> : null}</DragOverlay>
