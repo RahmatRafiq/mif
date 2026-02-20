@@ -4,15 +4,23 @@ namespace App\Providers;
 
 use App\Repositories\Contracts\ActivityLogRepositoryInterface;
 use App\Repositories\Contracts\GalleryRepositoryInterface;
+use App\Repositories\Contracts\LineRepositoryInterface;
 use App\Repositories\Contracts\MenuRepositoryInterface;
+use App\Repositories\Contracts\OrderRepositoryInterface;
 use App\Repositories\Contracts\PermissionRepositoryInterface;
 use App\Repositories\Contracts\RoleRepositoryInterface;
+use App\Repositories\Contracts\ScheduleDailyOutputRepositoryInterface;
+use App\Repositories\Contracts\ScheduleRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Eloquent\ActivityLogRepository;
 use App\Repositories\Eloquent\GalleryRepository;
+use App\Repositories\Eloquent\LineRepository;
 use App\Repositories\Eloquent\MenuRepository;
+use App\Repositories\Eloquent\OrderRepository;
 use App\Repositories\Eloquent\PermissionRepository;
 use App\Repositories\Eloquent\RoleRepository;
+use App\Repositories\Eloquent\ScheduleDailyOutputRepository;
+use App\Repositories\Eloquent\ScheduleRepository;
 use App\Repositories\Eloquent\UserRepository;
 use Illuminate\Support\ServiceProvider;
 
@@ -28,6 +36,10 @@ class RepositoryServiceProvider extends ServiceProvider
         GalleryRepositoryInterface::class => GalleryRepository::class,
         MenuRepositoryInterface::class => MenuRepository::class,
         ActivityLogRepositoryInterface::class => ActivityLogRepository::class,
+        LineRepositoryInterface::class => LineRepository::class,
+        OrderRepositoryInterface::class => OrderRepository::class,
+        ScheduleRepositoryInterface::class => ScheduleRepository::class,
+        ScheduleDailyOutputRepositoryInterface::class => ScheduleDailyOutputRepository::class,
     ];
 
     /**
